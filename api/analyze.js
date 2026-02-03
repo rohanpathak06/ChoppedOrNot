@@ -1,0 +1,61 @@
+export default async function handler(req, res) {
+    // Enable CORS
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+    
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
+    }
+    
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
+    
+    try {
+        const { imageData, mediaType } = req.body;
+        
+        if (!imageData || !mediaType) {
+            return res.status(400).json({ error: 'Missing image data' });
+        }
+        
+        // Call Google Gemini API with API key from environment variable
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GOOGLE_API_KEY}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [
+                        {
+                            inline_data: {
+                                mime_type: mediaType,
+                                data: imageData
+                            }
+                        },
+                        {
+                            text: 'Analyze this photo and rate the person\'s attractiveness on a scale of 1-10. Respond ONLY with a JSON object in this exact format: {"score": <number>, "reasoning": "<brief explanation>"}. No other text, no markdown, just the JSON.'
+                        }
+                    ]
+                }]
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Google API request failed');
+        }
+        
+        const data = await response.json();
+        const text = data.candidates[0].content.parts[0].text.trim();
+        const cleanText = text.replace(/```json|```/g, '').trim();
+        const result = JSON.parse(cleanText);
+        
+        return res.status(200).json({ score: result.score });
+    } catch (error) {
+        console.error('Error:', error);
+        return res.status(500).json({ error: 'Analysis failed' });
+    }
+}

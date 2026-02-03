@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>choppedOrNot</title>
+    <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+    color: #ffffff;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.container {
+    max-width: 600px;
+    width: 100%;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -1px;
+}
+
+.highlight {
+    color: #00ff88;
+}
+
+.tagline {
+    color: #888;
+    font-size: 0.95rem;
+}
+
+.upload-section {
+    margin-bottom: 30px;
+}
+
+.upload-box {
+    border: 2px dashed #333;
+    border-radius: 16px;
+    padding: 60px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.upload-box:hover {
+    border-color: #00ff88;
+    background: rgba(0, 255, 136, 0.05);
+}
+
+.upload-box.dragover {
+    border-color: #00ff88;
+    background: rgba(0, 255, 136, 0.1);
+}
+
+.upload-icon {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 20px;
+    color: #00ff88;
+}
+
+.upload-text {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    color: #fff;
+}
+
+.upload-subtext {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.preview-section {
+    text-align: center;
+}
+
+.preview-image {
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.analyze-btn {
+    background: linear-gradient(135deg, #00ff88 0%, #00cc6f 100%);
+    color: #0a0a0a;
+    border: none;
+    padding: 14px 32px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.analyze-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 255, 136, 0.3);
+}
+
+.analyze-btn:active {
+    transform: translateY(0);
+}
+
+.loading-section {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #333;
+    border-top-color: #00ff88;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-text {
+    color: #888;
+    font-size: 0.95rem;
+}
+
+.result-section {
+    text-align: center;
+}
+
+.result-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 40px 30px;
+    backdrop-filter: blur(10px);
+}
+
+.verdict {
+    font-size: 2rem;
+    margin-bottom: 16px;
+    font-weight: 700;
+}
+
+.verdict.chopped {
+    color: #00ff88;
+}
+
+.verdict.not-chopped {
+    color: #ff6b6b;
+}
+
+.commentary {
+    color: #ccc;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+.try-again-btn {
+    background: transparent;
+    color: #00ff88;
+    border: 2px solid #00ff88;
+    padding: 12px 28px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.try-again-btn:hover {
+    background: #00ff88;
+    color: #0a0a0a;
+}
+
+.hidden {
+    display: none;
+}
+
+footer {
+    text-align: center;
+    margin-top: 40px;
+}
+
+.footer-text {
+    color: #555;
+    font-size: 0.8rem;
+}
+
+.error-message {
+    color: #ff6b6b;
+    text-align: center;
+    padding: 20px;
+    background: rgba(255, 107, 107, 0.1);
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+@media (max-width: 600px) {
+    h1 {
+        font-size: 2rem;
+    }
+    
+    .upload-box {
+        padding: 40px 20px;
+    }
+    
+    .result-card {
+        padding: 30px 20px;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>chopped<span class="highlight">OrNot</span></h1>
+            <p class="tagline">let AI be the judge fr fr</p>
+        </header>
+
+        <main>
+            <div id="uploadSection" class="upload-section">
+                <div class="upload-box" id="uploadBox">
+                    <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <p class="upload-text">drop your pic or click to upload</p>
+                    <p class="upload-subtext">no cap, it stays on your device</p>
+                    <input type="file" id="fileInput" accept="image/*" hidden>
+                </div>
+            </div>
+
+            <div id="previewSection" class="preview-section hidden">
+                <img id="preview" class="preview-image" alt="Preview">
+                <button id="analyzeBtn" class="analyze-btn">check if i'm chopped</button>
+            </div>
+
+            <div id="loadingSection" class="loading-section hidden">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">AI doing its thing...</p>
+            </div>
+
+            <div id="resultSection" class="result-section hidden">
+                <div class="result-card">
+                    <h2 id="verdict" class="verdict"></h2>
+                    <p id="commentary" class="commentary"></p>
+                    <button id="tryAgainBtn" class="try-again-btn">run it back</button>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p class="footer-text">powered by claude • your pics never leave your browser bestie</p>
+        </footer>
+    </div>
+
+    <script>
+const uploadBox = document.getElementById('uploadBox');
+const fileInput = document.getElementById('fileInput');
+const uploadSection = document.getElementById('uploadSection');
+const previewSection = document.getElementById('previewSection');
+const loadingSection = document.getElementById('loadingSection');
+const resultSection = document.getElementById('resultSection');
+const preview = document.getElementById('preview');
+const analyzeBtn = document.getElementById('analyzeBtn');
+const tryAgainBtn = document.getElementById('tryAgainBtn');
+const verdict = document.getElementById('verdict');
+const commentary = document.getElementById('commentary');
+
+let currentImage = null;
+
+const choppedResponses = [
+    "bestie you're absolutely stunning ngl 💯",
+    "okay but the face card is SERVING ✨",
+    "you understood the assignment fr fr 🔥",
+    "main character energy for real",
+    "respectfully, you're that person 😮‍💨",
+    "the looks are looking fr no cap",
+    "ate and left no crumbs honestly",
+    "giving what needed to be gave 💅"
+];
+
+const notChoppedResponses = [
+    "it's giving... potential tho 💀",
+    "we all have our days bestie, this ain't it",
+    "the universe said not today apparently 🫠",
+    "maybe try a different angle? just saying 👀",
+    "personality > looks anyway right? 😬",
+    "it's the effort for me... i guess",
+    "everyone's beautiful in their own way or whatever 🥴",
+    "maybe lighting wasn't doing you favors idk"
+];
+
+uploadBox.addEventListener('click', () => fileInput.click());
+
+uploadBox.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadBox.classList.add('dragover');
+});
+
+uploadBox.addEventListener('dragleave', () => {
+    uploadBox.classList.remove('dragover');
+});
+
+uploadBox.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadBox.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+        handleImageUpload(file);
+    }
+});
+
+fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        handleImageUpload(file);
+    }
+});
+
+function handleImageUpload(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        currentImage = e.target.result;
+        preview.src = currentImage;
+        uploadSection.classList.add('hidden');
+        previewSection.classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+}
+
+analyzeBtn.addEventListener('click', async () => {
+    previewSection.classList.add('hidden');
+    loadingSection.classList.remove('hidden');
+    
+    try {
+        const base64Image = currentImage.split(',')[1];
+        const mediaType = currentImage.split(';')[0].split(':')[1];
+        
+        // Call our serverless function instead of Anthropic directly
+        const response = await fetch('/api/analyze', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                imageData: base64Image,
+                mediaType: mediaType
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Analysis failed');
+        }
+        
+        const data = await response.json();
+        displayResult(data.score);
+    } catch (err) {
+        console.error('Analysis error:', err);
+        loadingSection.classList.add('hidden');
+        resultSection.classList.remove('hidden');
+        verdict.textContent = "something went wrong 😭";
+        verdict.className = 'verdict not-chopped';
+        commentary.textContent = "the AI said nah, try again later bestie";
+    }
+});
+
+function displayResult(score) {
+    loadingSection.classList.add('hidden');
+    resultSection.classList.remove('hidden');
+    
+    const isChopped = score >= 7;
+    const responses = isChopped ? choppedResponses : notChoppedResponses;
+    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+    
+    verdict.textContent = isChopped ? "you're chopped ✨" : "not chopped bestie 😔";
+    verdict.className = isChopped ? 'verdict chopped' : 'verdict not-chopped';
+    commentary.textContent = randomResponse;
+}
+
+tryAgainBtn.addEventListener('click', () => {
+    resultSection.classList.add('hidden');
+    uploadSection.classList.remove('hidden');
+    fileInput.value = '';
+    currentImage = null;
+});
+    </script>
+</body>
+</html>
