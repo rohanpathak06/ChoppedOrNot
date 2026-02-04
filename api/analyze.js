@@ -20,9 +20,9 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'No API key' });
         }
         
-        // Updated API endpoint - v1 instead of v1beta, and gemini-1.5-flash-latest
+        // Using gemini-pro-vision which supports images
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=${API_KEY}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -36,7 +36,7 @@ export default async function handler(req, res) {
                                 }
                             },
                             {
-                                text: 'Analyze this photo and rate the person\'s attractiveness on a scale of 1-10. Respond ONLY with a JSON object in this exact format: {"score": <number>}. No other text.'
+                                text: 'Rate attractiveness 1-10. Reply with just: {"score": number}'
                             }
                         ]
                     }]
@@ -45,6 +45,7 @@ export default async function handler(req, res) {
         );
 
         const text = await response.text();
+        console.log('Response:', text);
         
         if (!response.ok) {
             console.error('API Error:', text);
