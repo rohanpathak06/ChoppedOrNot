@@ -20,9 +20,18 @@ export default async function handler(req, res) {
         if (!imageData || !mediaType) {
             return res.status(400).json({ error: 'Missing image data' });
         }
+
+        // Check if API key exists
+        const API_KEY = process.env.GOOGLE_API_KEY;
+        if (!API_KEY) {
+            console.error('GOOGLE_API_KEY not found in environment variables');
+            return res.status(500).json({ error: 'API key not configured' });
+        }
+
+        console.log('Calling Google API...');
         
-        // Call Google Gemini API with API key from environment variable
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GOOGLE_API_KEY}`, {
+        // Call Google Gemini API
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -43,19 +52,41 @@ export default async function handler(req, res) {
                 }]
             })
         });
+
+        const responseText = await response.text();
+        console.log('Response status:', response.status);
+        console.log('Response body:', responseText);
         
         if (!response.ok) {
-            throw new Error('Google API request failed');
+            console.error('Google API Error:', responseText);
+            return res.status(500).json({ 
+                error: 'Google API request failed', 
+                status: response.status,
+                details: responseText 
+            });
         }
         
-        const data = await response.json();
+        const data = JSON.parse(responseText);
+        
+        // Check if response has the expected structure
+        if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+            console.error('Unexpected API response structure:', data);
+            return res.status(500).json({ error: 'Unexpected API response', data });
+        }
+        
         const text = data.candidates[0].content.parts[0].text.trim();
+        console.log('AI Response text:', text);
+        
         const cleanText = text.replace(/```json|```/g, '').trim();
         const result = JSON.parse(cleanText);
         
         return res.status(200).json({ score: result.score });
     } catch (error) {
-        console.error('Error:', error);
-        return res.status(500).json({ error: 'Analysis failed' });
+        console.error('Error details:', error.message);
+        console.error('Full error:', error);
+        return res.status(500).json({ 
+            error: 'Analysis failed', 
+            message: error.message 
+        });
     }
 }
