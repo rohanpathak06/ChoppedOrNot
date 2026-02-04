@@ -374,24 +374,21 @@ analyzeBtn.addEventListener('click', async () => {
             })
         });
         
-        const data = await response.json();
-
         if (!response.ok) {
-            throw new Error(data.error || 'Analysis failed details: ' + (data.details || 'unknown'));
+            throw new Error('Analysis failed');
         }
         
+        const data = await response.json();
         displayResult(data.score);
     } catch (err) {
         console.error('Analysis error:', err);
         loadingSection.classList.add('hidden');
         resultSection.classList.remove('hidden');
-        verdict.textContent = "Error 😭";
+        verdict.textContent = "something went wrong 😭";
         verdict.className = 'verdict not-chopped';
-        // Show the actual error message to the user for debugging
-        commentary.textContent = `Server said: ${err.message}. Check Vercel logs or your API key.`;
+        commentary.textContent = "the AI said nah, try again later bestie";
     }
 });
-
 
 function displayResult(score) {
     loadingSection.classList.add('hidden');
