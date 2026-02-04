@@ -374,19 +374,20 @@ analyzeBtn.addEventListener('click', async () => {
             })
         });
         
+        const data = await response.json();
+
         if (!response.ok) {
-            throw new Error('Analysis failed');
+            throw new Error(data.details || data.error || 'Analysis failed');
         }
         
-        const data = await response.json();
         displayResult(data.score);
     } catch (err) {
         console.error('Analysis error:', err);
         loadingSection.classList.add('hidden');
         resultSection.classList.remove('hidden');
-        verdict.textContent = "something went wrong 😭";
-        verdict.className = 'verdict not-chopped';
-        commentary.textContent = "the AI said nah, try again later bestie";
+        verdict.textContent = "Error 😭";
+        verdict.className = 'verdict not-chopped'; // Red color
+        commentary.textContent = `Server said: ${err.message}. Check API Key settings.`;
     }
 });
 
